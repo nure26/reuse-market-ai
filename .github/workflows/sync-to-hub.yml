@@ -19,4 +19,4 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          huggingface-cli upload Nure26/reuse-market-ai . . --repo-type=space --token "$HF_TOKEN" --exclude ".git/*"
+          hf upload Nure26/reuse-market-ai . . --repo-type=space --token "$HF_TOKEN" --exclude ".git/*"

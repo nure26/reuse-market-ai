@@ -1,7 +1,7 @@
 # 1. Imports
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from ultralytics import YOLO
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import io
 
 # 2. Create FastAPI app
@@ -18,10 +18,15 @@ def home():
 # 5. Prediction endpoint
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    
+    if file.content_type is None or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image")
+
     image_bytes = await file.read()
 
-    image = Image.open(io.BytesIO(image_bytes))
+    try:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except UnidentifiedImageError:
+        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image")
 
     results = model(image)
 
@@ -32,12 +37,19 @@ async def predict(file: UploadFile = File(...)):
 
             cls = int(box.cls[0])
             conf = float(box.conf[0])
+            x1, y1, x2, y2 = [float(value) for value in box.xyxy[0]]
 
             label = model.names[cls]
 
             detections.append({
                 "label": label,
-                "confidence": round(conf, 2)
+                "confidence": round(conf, 2),
+                "box": {
+                    "x1": round(x1, 2),
+                    "y1": round(y1, 2),
+                    "x2": round(x2, 2),
+                    "y2": round(y2, 2)
+                }
             })
 
     return {

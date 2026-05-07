@@ -1,0 +1,20 @@
+name: Sync to Hugging Face
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hub
+        uses: huggingface/hub-sync@v1.0
+        with:
+          github_repo_id: nure26/reuse-market-ai
+          huggingface_repo_id: Nure26/reuse-market-ai
+          hf_token: ${{ secrets.HF_TOKEN }}
